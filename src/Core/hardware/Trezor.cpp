@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018, The CryptoNote developers, The Bytecoin developers.
+// Copyright (c) 2012-2018, The CryptoNote developers, The Spectre developers.
 // Licensed under the GNU Lesser General Public License. See LICENSE for details.
 
 #include "Trezor.hpp"
@@ -15,7 +15,7 @@
 #include "http/ResponseParser.hpp"
 #include "seria/BinaryInputStream.hpp"
 
-#include "trezor/messages-bytecoin.hpp"
+#include "trezor/messages-spectre.hpp"
 #include "trezor/messages-common.hpp"
 #include "trezor/messages.hpp"
 
@@ -196,19 +196,19 @@ Trezor::Trezor(const std::string &path) : m_path(path), m_socket(platform::Event
 	//    invariant(decode_any(resp2, messages::MessageType_MoneroWatchKey, m_socket, m_session,
 	//    http_resp.body), "");
 
-	messages::bytecoin::BytecoinStartRequest req;
+	messages::spectre::SpectreStartRequest req;
 
-	//	messages::bytecoin::BytecoinStartRequest req2;
-	//	messages::bytecoin::BytecoinStartRequest req3;
+	//	messages::spectre::SpectreStartRequest req2;
+	//	messages::spectre::SpectreStartRequest req3;
 	//	auto tmp = req.SerializeAsString();
 	//	protobuf::read(req2, tmp.begin(), tmp.end());
 	//	req3.ParseFromString(protobuf::write(req2));
 
 	auto http_resp =
-	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_BytecoinStartRequest));
-	messages::bytecoin::BytecoinStartResponse resp;
-	if (!decode_any(resp, messages::MessageType_BytecoinStartResponse, m_socket, m_session, http_resp.body))
-		throw Exception("Trezor bytecoin init message failed to decode, msg=" + http_resp.body);
+	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_SpectreStartRequest));
+	messages::spectre::SpectreStartResponse resp;
+	if (!decode_any(resp, messages::MessageType_SpectreStartResponse, m_socket, m_session, http_resp.body))
+		throw Exception("Trezor spectre init message failed to decode, msg=" + http_resp.body);
 	std::string major;
 	std::string minor;
 	if (!split_string(resp.version, ".", major, minor))
@@ -222,8 +222,8 @@ Trezor::Trezor(const std::string &path) : m_path(path), m_socket(platform::Event
 		std::throw_with_nested(
 		    Exception("Trezor wrong version format " + resp.version + ", please update your Trezor"));
 	}
-	//	messages::bytecoin::BytecoinStartResponse resp2;
-	//	messages::bytecoin::BytecoinStartResponse resp3;
+	//	messages::spectre::SpectreStartResponse resp2;
+	//	messages::spectre::SpectreStartResponse resp3;
 	//	tmp = resp.SerializeAsString();
 	//	std::cout << common::to_hex(common::as_binary_array(tmp)) << std::endl;
 	//	protobuf::read(resp2, tmp.begin(), tmp.end());
@@ -242,7 +242,7 @@ Trezor::Trezor(const std::string &path) : m_path(path), m_socket(platform::Event
 	//    std::string str = ga.SerializeAsString();
 	//    uint8_t header[6];
 	// common::uint_be_to_bytes(header, 2, unsigned(messages::MessageType_MoneroGetAddress));
-	//    common::uint_be_to_bytes(header, 2, unsigned(messages::MessageType_BytecoinStartRequest));
+	//    common::uint_be_to_bytes(header, 2, unsigned(messages::MessageType_SpectreStartRequest));
 	//    common::uint_be_to_bytes(header + 2, 4, str.size());
 	//    resp = trezor_post(socket, "/call/" + session, common::to_hex(header, 6) + common::to_hex(str.data(),
 	//    str.size())); decode_any(socket, session, resp.body); resp = trezor_post(socket, "/release/" + session, "");
@@ -257,14 +257,14 @@ std::vector<cn::PublicKey> Trezor::scan_outputs(const std::vector<cn::PublicKey>
 	invariant(output_public_keys.size() <= get_scan_outputs_max_batch(), "");
 	std::vector<PublicKey> result;
 	acquire();
-	messages::bytecoin::BytecoinScanOutputsRequest req;
+	messages::spectre::SpectreScanOutputsRequest req;
 	for (const auto &src : output_public_keys)
 		req.output_public_key.push_back(common::as_string(src.data, sizeof(PublicKey)));
 	auto http_resp =
-	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_BytecoinScanOutputsRequest));
-	messages::bytecoin::BytecoinScanOutputsResponse resp;
-	if (!decode_any(resp, messages::MessageType_BytecoinScanOutputsResponse, m_socket, m_session, http_resp.body))
-		throw Exception("Trezor bytecoin scan_outputs message failed to decode, msg=" + http_resp.body);
+	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_SpectreScanOutputsRequest));
+	messages::spectre::SpectreScanOutputsResponse resp;
+	if (!decode_any(resp, messages::MessageType_SpectreScanOutputsResponse, m_socket, m_session, http_resp.body))
+		throw Exception("Trezor spectre scan_outputs message failed to decode, msg=" + http_resp.body);
 	for (const auto &dst : resp.Pv) {
 		PublicKey pv;
 		seria::from_binary(pv, dst);
@@ -276,14 +276,14 @@ std::vector<cn::PublicKey> Trezor::scan_outputs(const std::vector<cn::PublicKey>
 
 cn::KeyImage Trezor::generate_keyimage(const common::BinaryArray &output_secret_hash_arg, size_t address_index) {
 	acquire();
-	messages::bytecoin::BytecoinGenerateKeyimageRequest req;
+	messages::spectre::SpectreGenerateKeyimageRequest req;
 	req.output_secret_hash_arg = common::as_string(output_secret_hash_arg);
 	req.address_index          = static_cast<uint32_t>(address_index);
 	auto http_resp =
-	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_BytecoinGenerateKeyimageRequest));
-	messages::bytecoin::BytecoinGenerateKeyimageResponse resp;
-	if (!decode_any(resp, messages::MessageType_BytecoinGenerateKeyimageResponse, m_socket, m_session, http_resp.body))
-		throw Exception("Trezor bytecoin generate_keyimage message failed to decode, msg=" + http_resp.body);
+	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_SpectreGenerateKeyimageRequest));
+	messages::spectre::SpectreGenerateKeyimageResponse resp;
+	if (!decode_any(resp, messages::MessageType_SpectreGenerateKeyimageResponse, m_socket, m_session, http_resp.body))
+		throw Exception("Trezor spectre generate_keyimage message failed to decode, msg=" + http_resp.body);
 	KeyImage result;
 	seria::from_binary(result, resp.keyimage);
 	release();
@@ -292,15 +292,15 @@ cn::KeyImage Trezor::generate_keyimage(const common::BinaryArray &output_secret_
 
 Hash Trezor::generate_output_seed(const Hash &tx_inputs_hash, size_t out_index) {
 	acquire();
-	messages::bytecoin::BytecoinGenerateOutputSeedRequest req;
+	messages::spectre::SpectreGenerateOutputSeedRequest req;
 	req.tx_inputs_hash = common::as_string(tx_inputs_hash.data, sizeof(Hash));
 	req.out_index      = static_cast<uint32_t>(out_index);
 	auto http_resp     = trezor_post(
-        m_socket, "/call/" + m_session, encode(req, messages::MessageType_BytecoinGenerateOutputSeedRequest));
-	messages::bytecoin::BytecoinGenerateOutputSeedResponse resp;
+        m_socket, "/call/" + m_session, encode(req, messages::MessageType_SpectreGenerateOutputSeedRequest));
+	messages::spectre::SpectreGenerateOutputSeedResponse resp;
 	if (!decode_any(
-	        resp, messages::MessageType_BytecoinGenerateOutputSeedResponse, m_socket, m_session, http_resp.body))
-		throw Exception("Trezor bytecoin generate_output_seed message failed to decode, msg=" + http_resp.body);
+	        resp, messages::MessageType_SpectreGenerateOutputSeedResponse, m_socket, m_session, http_resp.body))
+		throw Exception("Trezor spectre generate_output_seed message failed to decode, msg=" + http_resp.body);
 	Hash result;
 	seria::from_binary(result, resp.output_seed);
 	release();
@@ -309,34 +309,34 @@ Hash Trezor::generate_output_seed(const Hash &tx_inputs_hash, size_t out_index) 
 
 void Trezor::sign_start(size_t version, uint64_t ut, size_t inputs_size, size_t outputs_size, size_t extra_size) {
 	acquire();
-	messages::bytecoin::BytecoinSignStartRequest req;
+	messages::spectre::SpectreSignStartRequest req;
 	req.version      = static_cast<uint32_t>(version);
 	req.ut           = ut;
 	req.inputs_size  = static_cast<uint32_t>(inputs_size);
 	req.outputs_size = static_cast<uint32_t>(outputs_size);
 	req.extra_size   = static_cast<uint32_t>(extra_size);
 	auto http_resp =
-	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_BytecoinSignStartRequest));
-	messages::bytecoin::BytecoinEmptyResponse resp;
-	if (!decode_any(resp, messages::MessageType_BytecoinEmptyResponse, m_socket, m_session, http_resp.body))
-		throw Exception("Trezor bytecoin sign_start message failed to decode, msg=" + http_resp.body);
+	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_SpectreSignStartRequest));
+	messages::spectre::SpectreEmptyResponse resp;
+	if (!decode_any(resp, messages::MessageType_SpectreEmptyResponse, m_socket, m_session, http_resp.body))
+		throw Exception("Trezor spectre sign_start message failed to decode, msg=" + http_resp.body);
 	release();
 }
 
 void Trezor::sign_add_input(uint64_t amount, const std::vector<size_t> &output_indexes,
     const common::BinaryArray &output_secret_hash_arg, size_t address_index) {
 	acquire();
-	messages::bytecoin::BytecoinSignAddInputRequest req;
+	messages::spectre::SpectreSignAddInputRequest req;
 	req.amount = amount;
 	for (auto index : output_indexes)
 		req.output_indexes.push_back(static_cast<uint32_t>(index));
 	req.output_secret_hash_arg = common::as_string(output_secret_hash_arg);
 	req.address_index          = static_cast<uint32_t>(address_index);
 	auto http_resp =
-	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_BytecoinSignAddInputRequest));
-	messages::bytecoin::BytecoinEmptyResponse resp;
-	if (!decode_any(resp, messages::MessageType_BytecoinEmptyResponse, m_socket, m_session, http_resp.body))
-		throw Exception("Trezor bytecoin sign_add_input message failed to decode, msg=" + http_resp.body);
+	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_SpectreSignAddInputRequest));
+	messages::spectre::SpectreEmptyResponse resp;
+	if (!decode_any(resp, messages::MessageType_SpectreEmptyResponse, m_socket, m_session, http_resp.body))
+		throw Exception("Trezor spectre sign_add_input message failed to decode, msg=" + http_resp.body);
 	release();
 }
 
@@ -344,7 +344,7 @@ void Trezor::sign_add_output(bool change, uint64_t amount, size_t change_address
     PublicKey dst_address_s, PublicKey dst_address_s_v, PublicKey *public_key, PublicKey *encrypted_secret,
     uint8_t *encrypted_address_type) {
 	acquire();
-	messages::bytecoin::BytecoinSignAddOutputRequest req;
+	messages::spectre::SpectreSignAddOutputRequest req;
 	req.change               = change;
 	req.amount               = amount;
 	req.change_address_index = static_cast<uint32_t>(change_address_index);
@@ -352,10 +352,10 @@ void Trezor::sign_add_output(bool change, uint64_t amount, size_t change_address
 	req.dst_address_S        = common::as_string(dst_address_s.data, sizeof(PublicKey));
 	req.dst_address_Sv       = common::as_string(dst_address_s_v.data, sizeof(PublicKey));
 	auto http_resp =
-	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_BytecoinSignAddOutputRequest));
-	messages::bytecoin::BytecoinSignAddOutputResponse resp;
-	if (!decode_any(resp, messages::MessageType_BytecoinSignAddOutputResponse, m_socket, m_session, http_resp.body))
-		throw Exception("Trezor bytecoin sign_add_output message failed to decode, msg=" + http_resp.body);
+	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_SpectreSignAddOutputRequest));
+	messages::spectre::SpectreSignAddOutputResponse resp;
+	if (!decode_any(resp, messages::MessageType_SpectreSignAddOutputResponse, m_socket, m_session, http_resp.body))
+		throw Exception("Trezor spectre sign_add_output message failed to decode, msg=" + http_resp.body);
 	seria::from_binary(*public_key, resp.public_key);
 	seria::from_binary(*encrypted_secret, resp.encrypted_secret);
 	*encrypted_address_type = common::integer_cast<uint8_t>(resp.encrypted_address_type);
@@ -369,13 +369,13 @@ void Trezor::sign_add_extra(const BinaryArray &chunk) {
 	size_t pos = 0;
 	while (true) {
 		size_t stop = std::min(chunk.size(), pos + MAX_EXTRA_CHUNK);
-		messages::bytecoin::BytecoinSignAddExtraRequest req;
+		messages::spectre::SpectreSignAddExtraRequest req;
 		req.extra_chunk = common::as_string(chunk.data() + pos, stop - pos);
 		auto http_resp =
-		    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_BytecoinSignAddExtraRequest));
-		messages::bytecoin::BytecoinEmptyResponse resp;
-		if (!decode_any(resp, messages::MessageType_BytecoinEmptyResponse, m_socket, m_session, http_resp.body))
-			throw Exception("Trezor bytecoin sign_add_extra message failed to decode, msg=" + http_resp.body);
+		    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_SpectreSignAddExtraRequest));
+		messages::spectre::SpectreEmptyResponse resp;
+		if (!decode_any(resp, messages::MessageType_SpectreEmptyResponse, m_socket, m_session, http_resp.body))
+			throw Exception("Trezor spectre sign_add_extra message failed to decode, msg=" + http_resp.body);
 		pos = stop;
 		if (pos == chunk.size())
 			break;
@@ -386,14 +386,14 @@ void Trezor::sign_add_extra(const BinaryArray &chunk) {
 void Trezor::sign_step_a(const common::BinaryArray &output_secret_hash_arg, size_t address_index,
     crypto::EllipticCurvePoint *sig_p, crypto::EllipticCurvePoint *y, crypto::EllipticCurvePoint *z) {
 	acquire();
-	messages::bytecoin::BytecoinSignStepARequest req;
+	messages::spectre::SpectreSignStepARequest req;
 	req.output_secret_hash_arg = common::as_string(output_secret_hash_arg);
 	req.address_index          = static_cast<uint32_t>(address_index);
 	auto http_resp =
-	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_BytecoinSignStepARequest));
-	messages::bytecoin::BytecoinSignStepAResponse resp;
-	if (!decode_any(resp, messages::MessageType_BytecoinSignStepAResponse, m_socket, m_session, http_resp.body))
-		throw Exception("Trezor bytecoin sign_step_a message failed to decode, msg=" + http_resp.body);
+	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_SpectreSignStepARequest));
+	messages::spectre::SpectreSignStepAResponse resp;
+	if (!decode_any(resp, messages::MessageType_SpectreSignStepAResponse, m_socket, m_session, http_resp.body))
+		throw Exception("Trezor spectre sign_step_a message failed to decode, msg=" + http_resp.body);
 	seria::from_binary(*sig_p, resp.sig_p);
 	seria::from_binary(*y, resp.y);
 	seria::from_binary(*z, resp.z);
@@ -405,13 +405,13 @@ void Trezor::sign_step_a_more_data(const BinaryArray &data) {
 	size_t pos = 0;
 	while (true) {
 		size_t stop = std::min(data.size(), pos + MAX_EXTRA_CHUNK);
-		messages::bytecoin::BytecoinSignStepAMoreDataRequest req;
+		messages::spectre::SpectreSignStepAMoreDataRequest req;
 		req.data_chunk = common::as_string(data.data() + pos, stop - pos);
 		auto http_resp = trezor_post(
-		    m_socket, "/call/" + m_session, encode(req, messages::MessageType_BytecoinSignStepAMoreDataRequest));
-		messages::bytecoin::BytecoinEmptyResponse resp;
-		if (!decode_any(resp, messages::MessageType_BytecoinEmptyResponse, m_socket, m_session, http_resp.body))
-			throw Exception("Trezor bytecoin sign_step_a_more_data message failed to decode, msg=" + http_resp.body);
+		    m_socket, "/call/" + m_session, encode(req, messages::MessageType_SpectreSignStepAMoreDataRequest));
+		messages::spectre::SpectreEmptyResponse resp;
+		if (!decode_any(resp, messages::MessageType_SpectreEmptyResponse, m_socket, m_session, http_resp.body))
+			throw Exception("Trezor spectre sign_step_a_more_data message failed to decode, msg=" + http_resp.body);
 		pos = stop;
 		if (pos == data.size())
 			break;
@@ -421,12 +421,12 @@ void Trezor::sign_step_a_more_data(const BinaryArray &data) {
 
 crypto::EllipticCurveScalar Trezor::sign_get_c0() {
 	acquire();
-	messages::bytecoin::BytecoinSignGetC0Request req;
+	messages::spectre::SpectreSignGetC0Request req;
 	auto http_resp =
-	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_BytecoinSignGetC0Request));
-	messages::bytecoin::BytecoinSignGetC0Response resp;
-	if (!decode_any(resp, messages::MessageType_BytecoinSignGetC0Response, m_socket, m_session, http_resp.body))
-		throw Exception("Trezor bytecoin sign_get_c0 message failed to decode, msg=" + http_resp.body);
+	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_SpectreSignGetC0Request));
+	messages::spectre::SpectreSignGetC0Response resp;
+	if (!decode_any(resp, messages::MessageType_SpectreSignGetC0Response, m_socket, m_session, http_resp.body))
+		throw Exception("Trezor spectre sign_get_c0 message failed to decode, msg=" + http_resp.body);
 	crypto::EllipticCurveScalar c0;
 	seria::from_binary(c0, resp.c0);
 	release();
@@ -436,15 +436,15 @@ crypto::EllipticCurveScalar Trezor::sign_get_c0() {
 void Trezor::sign_step_b(const common::BinaryArray &output_secret_hash_arg, size_t address_index,
     crypto::EllipticCurveScalar my_c, Hash *sig_my_rr, Hash *sig_rs, Hash *sig_ra, Hash *e_key) {
 	acquire();
-	messages::bytecoin::BytecoinSignStepBRequest req;
+	messages::spectre::SpectreSignStepBRequest req;
 	req.output_secret_hash_arg = common::as_string(output_secret_hash_arg);
 	req.address_index          = static_cast<uint32_t>(address_index);
 	req.my_c                   = common::as_string(my_c.data, sizeof(crypto::EllipticCurveScalar));
 	auto http_resp =
-	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_BytecoinSignStepBRequest));
-	messages::bytecoin::BytecoinSignStepBResponse resp;
-	if (!decode_any(resp, messages::MessageType_BytecoinSignStepBResponse, m_socket, m_session, http_resp.body))
-		throw Exception("Trezor bytecoin sign_step_b message failed to decode, msg=" + http_resp.body);
+	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_SpectreSignStepBRequest));
+	messages::spectre::SpectreSignStepBResponse resp;
+	if (!decode_any(resp, messages::MessageType_SpectreSignStepBResponse, m_socket, m_session, http_resp.body))
+		throw Exception("Trezor spectre sign_step_b message failed to decode, msg=" + http_resp.body);
 	seria::from_binary(*sig_my_rr, resp.my_rr);
 	seria::from_binary(*sig_rs, resp.rs);
 	seria::from_binary(*sig_ra, resp.ra);
@@ -454,13 +454,13 @@ void Trezor::sign_step_b(const common::BinaryArray &output_secret_hash_arg, size
 
 void Trezor::proof_start(const common::BinaryArray &data) {
 	acquire();
-	messages::bytecoin::BytecoinStartProofRequest req;
+	messages::spectre::SpectreStartProofRequest req;
 	req.data_size = common::integer_cast<uint32_t>(data.size());
 	auto http_resp =
-	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_BytecoinStartProofRequest));
-	messages::bytecoin::BytecoinEmptyResponse resp;
-	if (!decode_any(resp, messages::MessageType_BytecoinEmptyResponse, m_socket, m_session, http_resp.body))
-		throw Exception("Trezor bytecoin proof_start message failed to decode, msg=" + http_resp.body);
+	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_SpectreStartProofRequest));
+	messages::spectre::SpectreEmptyResponse resp;
+	if (!decode_any(resp, messages::MessageType_SpectreEmptyResponse, m_socket, m_session, http_resp.body))
+		throw Exception("Trezor spectre proof_start message failed to decode, msg=" + http_resp.body);
 	release();
 	sign_add_extra(data);
 }
@@ -468,12 +468,12 @@ void Trezor::proof_start(const common::BinaryArray &data) {
 void Trezor::export_view_only(SecretKey *audit_key_base_secret_key, SecretKey *view_secret_key, Hash *view_seed,
     Signature *view_secrets_signature) {
 	acquire();
-	messages::bytecoin::BytecoinExportViewWalletRequest req;
+	messages::spectre::SpectreExportViewWalletRequest req;
 	auto http_resp =
-	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_BytecoinExportViewWalletRequest));
-	messages::bytecoin::BytecoinExportViewWalletResponse resp;
-	if (!decode_any(resp, messages::MessageType_BytecoinExportViewWalletResponse, m_socket, m_session, http_resp.body))
-		throw Exception("Trezor bytecoin export_view_only message failed to decode, msg=" + http_resp.body);
+	    trezor_post(m_socket, "/call/" + m_session, encode(req, messages::MessageType_SpectreExportViewWalletRequest));
+	messages::spectre::SpectreExportViewWalletResponse resp;
+	if (!decode_any(resp, messages::MessageType_SpectreExportViewWalletResponse, m_socket, m_session, http_resp.body))
+		throw Exception("Trezor spectre export_view_only message failed to decode, msg=" + http_resp.body);
 	seria::from_binary(*audit_key_base_secret_key, resp.audit_key_base_secret_key);
 	seria::from_binary(*view_secret_key, resp.view_secret_key);
 	seria::from_binary(*view_seed, resp.view_seed);

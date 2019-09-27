@@ -51,7 +51,7 @@ static bool eq_output(const api::Output &a, const api::Output &b) {
 // corresponding output is also NOP in model
 // They will both incorrectly show corresponding unspent as available, creating
 // invalid transactions
-// We might add "conflicting keyimage" to bytecoind CreateTransaction reply, so
+// We might add "conflicting keyimage" to spectred CreateTransaction reply, so
 // that they can somehow update their
 // balances
 class WalletStateModel : public IWalletState {

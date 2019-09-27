@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018, The CryptoNote developers, The Bytecoin developers.
+// Copyright (c) 2012-2018, The CryptoNote developers, The Spectre developers.
 // Licensed under the GNU Lesser General Public License. See LICENSE for details.
 
 #pragma once
@@ -23,7 +23,7 @@ namespace cn { namespace parameters {
 const char GENESIS_COINBASE_TX_HEX[] =
     "010a01ff0001ffffffffffff0f029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121013c086a48c15fb637a96991bc6d53caf77068b5ba6eeb3c82357228c49790584a";
 // Technically, we should not have predefined genesis block, first hard checkpoint is enough. This is bitcoin legacy.
-constexpr UUID BYTECOIN_NETWORK = common::pfh<UUID>("11100111110001011011001210110110");  // Bender's nightmare
+constexpr UUID SPECTRE_NETWORK = common::pfh<UUID>("11100111110001011011001210110110");  // Bender's nightmare
 
 const Height UPGRADE_HEIGHT_V2                  = 546603;
 const Height UPGRADE_HEIGHT_V3                  = 985549;

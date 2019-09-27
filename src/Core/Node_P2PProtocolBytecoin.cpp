@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018, The CryptoNote developers, The Bytecoin developers.
+// Copyright (c) 2012-2018, The CryptoNote developers, The Spectre developers.
 // Licensed under the GNU Lesser General Public License. See LICENSE for details.
 
 #include <iostream>
@@ -24,62 +24,62 @@ static bool greater_fee_per_byte(const TransactionDesc &a, const TransactionDesc
 	return std::tie(afb, a.hash) > std::tie(bfb, b.hash);
 }
 
-Node::P2PProtocolBytecoin::P2PProtocolBytecoin(Node *node, P2PClient *client)
+Node::P2PProtocolSpectre::P2PProtocolSpectre(Node *node, P2PClient *client)
     : P2PProtocolBasic(node->m_config, node->m_p2p.get_unique_number(), client)
     , m_node(node)
-    , m_chain_timer(std::bind(&P2PProtocolBytecoin::on_chain_timer, this))
-    , m_download_timer(std::bind(&P2PProtocolBytecoin::on_download_timer, this))
-    , m_syncpool_timer(std::bind(&P2PProtocolBytecoin::on_syncpool_timer, this))
-    , m_download_transactions_timer(std::bind(&P2PProtocolBytecoin::on_download_transactions_timer, this)) {}
+    , m_chain_timer(std::bind(&P2PProtocolSpectre::on_chain_timer, this))
+    , m_download_timer(std::bind(&P2PProtocolSpectre::on_download_timer, this))
+    , m_syncpool_timer(std::bind(&P2PProtocolSpectre::on_syncpool_timer, this))
+    , m_download_transactions_timer(std::bind(&P2PProtocolSpectre::on_download_transactions_timer, this)) {}
 
-Node::P2PProtocolBytecoin::~P2PProtocolBytecoin() = default;
+Node::P2PProtocolSpectre::~P2PProtocolSpectre() = default;
 
-CoreSyncData Node::P2PProtocolBytecoin::get_my_sync_data() const {
+CoreSyncData Node::P2PProtocolSpectre::get_my_sync_data() const {
 	CoreSyncData sync_data;
 	sync_data.current_height = m_node->m_block_chain.get_tip_height();
 	sync_data.top_id         = m_node->m_block_chain.get_tip_bid();
 	return sync_data;
 }
 
-std::vector<NetworkAddress> Node::P2PProtocolBytecoin::get_peers_to_share() const {
+std::vector<NetworkAddress> Node::P2PProtocolSpectre::get_peers_to_share() const {
 	return m_node->m_peer_db->get_peerlist_to_p2p(
 	    get_address(), m_node->m_p2p.get_local_time(), config.p2p_default_peers_in_handshake);
 }
 
-std::vector<PeerlistEntryLegacy> Node::P2PProtocolBytecoin::get_legacy_peers_to_share() const {
+std::vector<PeerlistEntryLegacy> Node::P2PProtocolSpectre::get_legacy_peers_to_share() const {
 	return m_node->m_peer_db->get_peerlist_to_p2p_legacy(
 	    get_address(), m_node->m_p2p.get_local_time(), config.p2p_default_peers_in_handshake);
 }
 
-void Node::P2PProtocolBytecoin::on_first_message_after_handshake() {
+void Node::P2PProtocolSpectre::on_first_message_after_handshake() {
 	// if we set just seen on handshake, we will keep connecting to seed nodes forever
 	m_node->m_peer_db->set_peer_just_seen(get_peer_unique_number(), get_address(), m_node->m_p2p.get_local_time());
 }
 
-void Node::P2PProtocolBytecoin::on_chain_timer() {
+void Node::P2PProtocolSpectre::on_chain_timer() {
 	invariant(m_chain_request_sent, "");
 	m_node->m_log(logging::TRACE) << "on_chain_timer, disconnecting " << get_address();
 	disconnect(std::string{});
 }
 
-void Node::P2PProtocolBytecoin::on_download_timer() {
+void Node::P2PProtocolSpectre::on_download_timer() {
 	invariant(m_downloading_block_count != 0, "");
 	m_node->m_log(logging::TRACE) << "on_download_timer, disconnecting " << get_address();
 	disconnect(std::string{});
 }
 
-void Node::P2PProtocolBytecoin::on_syncpool_timer() {
+void Node::P2PProtocolSpectre::on_syncpool_timer() {
 	invariant(m_syncpool_request_sent, "");
 	m_node->m_log(logging::TRACE) << "on_download_transactions_timer, disconnecting " << get_address();
 	disconnect(std::string{});
 }
-void Node::P2PProtocolBytecoin::on_download_transactions_timer() {
+void Node::P2PProtocolSpectre::on_download_transactions_timer() {
 	invariant(m_downloading_transaction_count != 0, "");
 	m_node->m_log(logging::TRACE) << "on_download_transactions_timer, disconnecting " << get_address();
 	disconnect(std::string{});
 }
 
-void Node::P2PProtocolBytecoin::advance_chain() {
+void Node::P2PProtocolSpectre::advance_chain() {
 	if (is_incoming() || !m_chain.empty() || m_chain_request_sent)
 		return;
 	api::BlockHeader info;
@@ -115,7 +115,7 @@ void Node::P2PProtocolBytecoin::advance_chain() {
 	send(std::move(raw_msg));
 }
 
-void Node::P2PProtocolBytecoin::advance_blocks() {
+void Node::P2PProtocolSpectre::advance_blocks() {
 	// Remove already added to the block chain
 	while (!m_chain.empty() && m_node->m_block_chain.has_header(m_chain.front()->first) &&
 	       m_chain.front()->second.who_downloading != this) {
@@ -158,7 +158,7 @@ void Node::P2PProtocolBytecoin::advance_blocks() {
 	}
 }
 
-void Node::P2PProtocolBytecoin::advance_transactions() {
+void Node::P2PProtocolSpectre::advance_transactions() {
 	if (get_peer_sync_data().top_id != m_node->m_block_chain.get_tip_bid())
 		return;
 	if (!m_syncpool_request_sent) {
@@ -176,7 +176,7 @@ void Node::P2PProtocolBytecoin::advance_transactions() {
 	}
 }
 
-bool Node::P2PProtocolBytecoin::on_transaction_descs(const std::vector<TransactionDesc> &descs) {
+bool Node::P2PProtocolSpectre::on_transaction_descs(const std::vector<TransactionDesc> &descs) {
 	const auto &pool   = m_node->m_block_chain.get_memory_state_transactions();
 	Amount minimum_fee = m_node->m_block_chain.minimum_pool_fee_per_byte(true);
 	//	Amount previous_fee_per_byte = std::numeric_limits<Amount>::max();
@@ -224,7 +224,7 @@ bool Node::P2PProtocolBytecoin::on_transaction_descs(const std::vector<Transacti
 	return true;
 }
 
-void Node::P2PProtocolBytecoin::transaction_download_finished(const Hash &tid, bool success) {
+void Node::P2PProtocolSpectre::transaction_download_finished(const Hash &tid, bool success) {
 	auto tit = m_transaction_descs.find(tid);
 	if (tit == m_transaction_descs.end())
 		return;
@@ -241,7 +241,7 @@ void Node::P2PProtocolBytecoin::transaction_download_finished(const Hash &tid, b
 	send(LevinProtocol::send(msg));
 }
 
-bool Node::P2PProtocolBytecoin::on_idle(std::chrono::steady_clock::time_point idle_start) {
+bool Node::P2PProtocolSpectre::on_idle(std::chrono::steady_clock::time_point idle_start) {
 	size_t added_counter                                 = 0;
 	boost::variant<ConsensusError, PreparedBlock> result = ConsensusError{""};
 	while (!m_chain.empty() && m_node->m_pow_checker.get_prepared_block(m_chain.front()->first, &result)) {
@@ -303,7 +303,7 @@ bool Node::P2PProtocolBytecoin::on_idle(std::chrono::steady_clock::time_point id
 	return !m_chain.empty() && m_node->m_pow_checker.has_prepared_block(m_chain.front()->first);
 }
 
-void Node::P2PProtocolBytecoin::after_handshake() {
+void Node::P2PProtocolSpectre::after_handshake() {
 	m_node->m_p2p.peers_updated();
 	m_node->m_broadcast_protocols.insert(this);
 	m_node->advance_long_poll();
@@ -318,18 +318,18 @@ void Node::P2PProtocolBytecoin::after_handshake() {
 	advance_chain();
 }
 
-void Node::P2PProtocolBytecoin::on_msg_handshake(p2p::Handshake::Request &&req) {
+void Node::P2PProtocolSpectre::on_msg_handshake(p2p::Handshake::Request &&req) {
 	m_node->m_peer_db->add_incoming_peer(get_address(), m_node->m_p2p.get_local_time());
 	after_handshake();
 }
 
-void Node::P2PProtocolBytecoin::on_msg_handshake(p2p::Handshake::Response &&req) {
+void Node::P2PProtocolSpectre::on_msg_handshake(p2p::Handshake::Response &&req) {
 	m_node->m_peer_db->merge_peerlist_from_p2p(get_address(), req.local_peerlist, m_node->m_p2p.get_local_time());
 	m_node->m_peer_db->merge_peerlist_from_p2p(get_address(), req.peerlist, m_node->m_p2p.get_local_time());
 	after_handshake();
 }
 
-void Node::P2PProtocolBytecoin::on_msg_notify_request_chain(p2p::GetChain::Request &&req) {
+void Node::P2PProtocolSpectre::on_msg_notify_request_chain(p2p::GetChain::Request &&req) {
 	if (req.block_ids.size() > p2p::GetChain::Request::MAX_BLOCK_IDS)
 		return disconnect("GetChainRequest too many block_ids");
 	p2p::GetChain::Response msg;
@@ -340,7 +340,7 @@ void Node::P2PProtocolBytecoin::on_msg_notify_request_chain(p2p::GetChain::Reque
 	send(std::move(raw_msg));
 }
 
-void Node::P2PProtocolBytecoin::on_msg_notify_request_chain(p2p::GetChain::Response &&req) {
+void Node::P2PProtocolSpectre::on_msg_notify_request_chain(p2p::GetChain::Response &&req) {
 	if (req.m_block_ids.size() > p2p::GetChain::Response::MAX_BLOCK_IDS)
 		return disconnect("GetChainResponse too many block_ids");
 	if (!m_chain_request_sent)
@@ -378,7 +378,7 @@ void Node::P2PProtocolBytecoin::on_msg_notify_request_chain(p2p::GetChain::Respo
 	advance_blocks();
 }
 
-void Node::P2PProtocolBytecoin::on_msg_notify_request_objects(p2p::GetObjects::Request &&req) {
+void Node::P2PProtocolSpectre::on_msg_notify_request_objects(p2p::GetObjects::Request &&req) {
 	if (req.txs.size() + req.blocks.size() != 1)
 		return disconnect("Must be 1 block or 1 transaction in GetObjectsRequest");
 	p2p::GetObjects::Response msg;
@@ -410,7 +410,7 @@ void Node::P2PProtocolBytecoin::on_msg_notify_request_objects(p2p::GetObjects::R
 	send(LevinProtocol::send(msg));
 }
 
-void Node::P2PProtocolBytecoin::on_msg_notify_request_objects(p2p::GetObjects::Response &&req) {
+void Node::P2PProtocolSpectre::on_msg_notify_request_objects(p2p::GetObjects::Response &&req) {
 	if (req.blocks.size() + req.txs.size() + req.missed_ids.size() != 1)
 		return disconnect("Too much objects in GetObjectsResponse");
 	for (auto &&rb : req.blocks) {  // 0 or 1
@@ -533,7 +533,7 @@ void Node::P2PProtocolBytecoin::on_msg_notify_request_objects(p2p::GetObjects::R
 		advance_blocks();
 }
 
-void Node::P2PProtocolBytecoin::on_disconnect(const std::string &ban_reason) {
+void Node::P2PProtocolSpectre::on_disconnect(const std::string &ban_reason) {
 	m_node->m_broadcast_protocols.erase(this);
 
 	m_chain_request_sent = false;
@@ -569,7 +569,7 @@ void Node::P2PProtocolBytecoin::on_disconnect(const std::string &ban_reason) {
 	m_node->advance_long_poll();
 }
 
-void Node::P2PProtocolBytecoin::on_msg_notify_request_tx_pool(p2p::SyncPool::Request &&req) {
+void Node::P2PProtocolSpectre::on_msg_notify_request_tx_pool(p2p::SyncPool::Request &&req) {
 	if (req.from <= req.to)
 		return disconnect("SyncPool request from <= to");
 	p2p::SyncPool::Response msg;
@@ -577,7 +577,7 @@ void Node::P2PProtocolBytecoin::on_msg_notify_request_tx_pool(p2p::SyncPool::Req
 	send(LevinProtocol::send(msg));
 }
 
-void Node::P2PProtocolBytecoin::on_msg_notify_request_tx_pool(p2p::SyncPool::Response &&req) {
+void Node::P2PProtocolSpectre::on_msg_notify_request_tx_pool(p2p::SyncPool::Response &&req) {
 	m_syncpool_timer.cancel();
 	m_syncpool_request_sent = false;
 	if (req.transaction_descs.size() > p2p::SyncPool::Response::MAX_DESC_COUNT)
@@ -597,9 +597,9 @@ void Node::P2PProtocolBytecoin::on_msg_notify_request_tx_pool(p2p::SyncPool::Res
 	advance_transactions();
 }
 
-void Node::P2PProtocolBytecoin::on_msg_timed_sync(p2p::TimedSync::Notify &&req) { advance_chain(); }
+void Node::P2PProtocolSpectre::on_msg_timed_sync(p2p::TimedSync::Notify &&req) { advance_chain(); }
 
-void Node::P2PProtocolBytecoin::on_msg_notify_new_block(p2p::RelayBlock::Notify &&req) {
+void Node::P2PProtocolSpectre::on_msg_notify_new_block(p2p::RelayBlock::Notify &&req) {
 	if (!req.b.transactions.empty())
 		return disconnect("RelayBlock only header is allowed");
 	if (m_node->m_block_chain.has_header(req.top_id))
@@ -650,13 +650,13 @@ void Node::P2PProtocolBytecoin::on_msg_notify_new_block(p2p::RelayBlock::Notify 
 	}
 }
 
-void Node::P2PProtocolBytecoin::on_msg_notify_new_transactions(p2p::RelayTransactions::Notify &&req) {
+void Node::P2PProtocolSpectre::on_msg_notify_new_transactions(p2p::RelayTransactions::Notify &&req) {
 	if (req.transaction_descs.size() > p2p::RelayTransactions::Notify::MAX_DESC_COUNT)
 		return disconnect("RelayTransactions too much descs");
 	on_transaction_descs(req.transaction_descs);
 }
 
-void Node::P2PProtocolBytecoin::on_msg_notify_checkpoint(p2p::Checkpoint::Notify &&req) {
+void Node::P2PProtocolSpectre::on_msg_notify_checkpoint(p2p::Checkpoint::Notify &&req) {
 	if (!m_node->m_block_chain.add_checkpoint(req, get_address().to_string()))
 		return;
 	m_node->m_log(logging::INFO) << "p2p::Checkpoint::Notify height=" << req.height << " hash=" << req.hash
@@ -671,9 +671,9 @@ void Node::P2PProtocolBytecoin::on_msg_notify_checkpoint(p2p::Checkpoint::Notify
 	m_node->advance_long_poll();
 }
 
-#if bytecoin_ALLOW_DEBUG_COMMANDS
+#if spectre_ALLOW_DEBUG_COMMANDS
 
-void Node::P2PProtocolBytecoin::on_msg_stat_info(p2p::GetStatInfo::Request &&req) {
+void Node::P2PProtocolSpectre::on_msg_stat_info(p2p::GetStatInfo::Request &&req) {
 	if (!m_node->check_trust(req.tr))
 		return disconnect(std::string{});
 	p2p::GetStatInfo::Response msg = m_node->create_statistics_response(api::cnd::GetStatistics::Request{true, true});
