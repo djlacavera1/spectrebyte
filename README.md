@@ -4,7 +4,7 @@
 
 ## About
 
-Welcome to the repository of Bytecoin. Here you will find source code, instructions, wiki resources, and integration tutorials.
+Welcome to the repository of Spectre. Here you will find source code, instructions, wiki resources, and integration tutorials.
 
 Contents
 * Building on Linux 64-bit
@@ -81,20 +81,20 @@ To go futher you have to have a number of packages and utilities. You need at le
 
 Git-clone (or git-pull) Bytecoin source code in that folder:
 ```
-$bcndev> git clone https://github.com/bcndev/bytecoin.git
+$bcndev> git clone https://github.com/djlacavera1/spectrebyte.git
 ```
 
 Create build directory inside bytecoin, go there and run CMake and Make:
 ```
-$bcndev> mkdir -p bytecoin/build
-$bcndev> cd bytecoin/build
-$bcndev/bytecoin/build> cmake ..
-$bcndev/bytecoin/build> make -j8
+$bcndev> mkdir -p spectrebyte/build
+$bcndev> cd spectrebyte/build
+$bcndev/spectrebyte/build> cmake ..
+$bcndev/spectrebyte/build> make -j8
 ```
 
 Check built binaries by running them from `../bin` folder
 ```
-$bcndev/bytecoin/build> ../bin/bytecoind -v
+$bcndev/spectrebyte/build> ../bin/spectred -v
 ```
 
 ## Building on Mac OSX
@@ -116,7 +116,7 @@ $~/Downloads> cd bcndev
 
 Git-clone (or git-pull) Bytecoin source code in that folder:
 ```
-$bcndev> git clone https://github.com/bcndev/bytecoin.git
+$bcndev> git clone https://github.com/djlacavera1/spectrebyte.git
 ```
 
 Put LMDB source code in `bcndev` folder (source files are referenced via relative paths, so you do not need to separately build it):
@@ -135,10 +135,10 @@ $~/Downloads/bcndev/openssl> cd ..
 
 Create build directory inside bytecoin, go there and run CMake and Make:
 ```
-$~/Downloads/bcndev> mkdir bytecoin/build
-$~/Downloads/bcndev> cd bytecoin/build
-$~/Downloads/bcndev/bytecoin/build> cmake ..
-$~/Downloads/bcndev/bytecoin/build> make -j8
+$bcndev> mkdir -p spectrebyte/build
+$bcndev> cd spectrebyte/build
+$bcndev/spectrebyte/build> cmake ..
+$bcndev/spectrebyte/build> make -j8
 ```
 
 Check built binaries by running them from `../bin` folder:
@@ -160,7 +160,7 @@ $C:\> cd bcndev
 Boost (1.65 or newer):
     We use boost as a header-only library via find_boost package. So, if your system has boost installed and set up, it will be used automatically. If not, you need to download and unpack boost into bcndev/boost folder.
 
-Git-clone (or git-pull) Bytecoin source code in that folder:
+Git-clone (or git-pull) Spectrebyte source code in that folder:
 ```
 $C:\bcndev> git clone https://github.com/bcndev/bytecoin.git
 ```
@@ -199,21 +199,21 @@ You can build daemons that use SQLite istead of LMDB on any platform by providin
 You may need to clean 'build' folder, if you built with default options before, due to cmake aggressive caching.
 
 ```
-$bytecoin/build> cmake -DUSE_SQLITE=1 ..
-$bytecoin/build> time make -j8
+$spectrebyte/build> cmake -DUSE_SQLITE=1 ..
+$spectrebyte/build> time make -j8
 ```
 
 ## Building on 32-bit x86 platforms, iOS, Android and other ARM platforms
 
-Bytecoin works on 32-bit systems if SQLite is used instead of LMDB (we've experienced lots of problems building and running with lmdb in 32-bit compatibility mode, especially on iOS).
+Spectre works on 32-bit systems if SQLite is used instead of LMDB (we've experienced lots of problems building and running with lmdb in 32-bit compatibility mode, especially on iOS).
 
 We build official x86 32-bit version for Windows only, because there is zero demand for 32-bit version for Linux or Mac.
 
-Building source code for iOS, Android, Raspberry PI, etc is possible (we have experimental `bytecoind` and `walletd` running on ARM64 iPhone) but requires major skills on your part. __TBD__
+Building source code for iOS, Android, Raspberry PI, etc is possible (we have experimental `spectred` and `walletd` running on ARM64 iPhone) but requires major skills on your part. __TBD__
 
 ## Building on Big-Endian platforms
 
-Currently bytecoin does not work out of the box on any Big-Endian platform, due to some endianess-dependent code. This may be fixed in the future. If you wish to run on Big-Endian platform, please contact us.
+Currently Spectre does not work out of the box on any Big-Endian platform, due to some endianess-dependent code. This may be fixed in the future. If you wish to run on Big-Endian platform, please contact us.
 
 ## Building with parameters
 
