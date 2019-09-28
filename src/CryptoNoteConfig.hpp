@@ -25,9 +25,9 @@ const char GENESIS_COINBASE_TX_HEX[] =
 // Technically, we should not have predefined genesis block, first hard checkpoint is enough. This is bitcoin legacy.
 constexpr UUID SPECTRE_NETWORK = common::pfh<UUID>("11100111110001011011001210110110");  // Bender's nightmare
 
-const Height UPGRADE_HEIGHT_V2                  = 546603;
-const Height UPGRADE_HEIGHT_V3                  = 985549;
-const Height UPGRADE_HEIGHT_V4                  = 1792117;
+const Height UPGRADE_HEIGHT_V2                  = 4320;
+const Height UPGRADE_HEIGHT_V3                  = 8640;
+const Height UPGRADE_HEIGHT_V4                  = 12960;
 const Height KEY_IMAGE_SUBGROUP_CHECKING_HEIGHT = 1267000;
 
 // Radical simplification of consensus rules starts from versions
@@ -43,11 +43,11 @@ const unsigned EMISSION_SPEED_FACTOR = 18;
 static_assert(EMISSION_SPEED_FACTOR > 0 && EMISSION_SPEED_FACTOR <= 8 * sizeof(uint64_t), "Bad EMISSION_SPEED_FACTOR");
 
 const size_t DISPLAY_DECIMAL_POINT = 8;
-const Amount MIN_DUST_THRESHOLD    = 1000000;            // Everything smaller will be split in groups of 3 digits
-const Amount MAX_DUST_THRESHOLD    = 30000000000000000;  // Everything larger is dust because very few coins
+const Amount MIN_DUST_THRESHOLD    = 0;            // Everything smaller will be split in groups of 3 digits
+const Amount MAX_DUST_THRESHOLD    = 3000;  // Everything larger is dust because very few coins
 const Amount SELF_DUST_THRESHOLD   = 1000;               // forfeit outputs smaller than this in a change
 
-const uint64_t ADDRESS_BASE58_PREFIX          = 6;       // legacy addresses start with "2"
+const uint64_t ADDRESS_BASE58_PREFIX          = 0x2b;       // legacy addresses start with "2"
 const uint64_t ADDRESS_BASE58_PREFIX_AMETHYST = 572238;  // addresses start with "bcnZ", varintdata={0xce, 0xf6, 0x22}
 const uint64_t SENDPROOF_BASE58_PREFIX        = 86762904402638;
 // proofs start with "bcn1PRoof", varintdata={0xce, 0xf5, 0xe2, 0x80, 0x91, 0xdd, 0x13}
